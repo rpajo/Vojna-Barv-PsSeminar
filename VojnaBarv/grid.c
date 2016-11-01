@@ -64,7 +64,7 @@ Grid *processGrid(Grid * grid, unsigned char **newGrid) {
 	int windowSize = (1 + 2 * window);
 
 	// array of cells inside window
-	int *neighbors = (int *)calloc(windowSize * windowSize - 1, sizeof(int));
+	int *neighbors = (int *)calloc(windowSize * windowSize -1, sizeof(int));
 
 	int index = 0; // point to last neightbor added
 
@@ -83,8 +83,10 @@ Grid *processGrid(Grid * grid, unsigned char **newGrid) {
 					if (y + i < 0 || y + i > grid->height - 1) break; // check if window is out of bounds  - y axis
 					//printf("x+j= %d\n", (x + j));
 					if (x + j >= 0 && x + j < grid->width) { // check that window is not out of bounds - x axis
-						if (grid->colors[y + i][x + j] != 0 && !(i == 0 && j == 0)) { // neighbor must not be blank - 0
-							if(grid->colors[y + i][x + j] != 3) // check for walls - they don't color
+						if (grid->colors[y + i][x + j] != 0   // neighbor must not be blank - 0
+							&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
+							&& grid->colors[y + i][x + j] != 3	// don't add walls to neighbors
+						) {
 							neighbors[index] = grid->colors[y + i][x + j];
 							index++;
 						}
@@ -106,6 +108,7 @@ Grid *processGrid(Grid * grid, unsigned char **newGrid) {
 		memcpy(grid->colors[i], newGrid[i], grid->width * sizeof(char));
 	}
 
+	free(neighbors);
 
 
 	return grid;
