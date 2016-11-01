@@ -18,10 +18,10 @@
     <ClCompile Include="main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="grid.c">
+    <ClCompile Include="render.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="render.c">
+    <ClCompile Include="grid.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
