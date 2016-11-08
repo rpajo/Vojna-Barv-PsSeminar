@@ -29,18 +29,19 @@ SDL_Rect **initRects(Grid *grid, unsigned int cellSize) {
 	}
 	// Dealocate all allocated rows if error.
 	if (error) {
-		freeRects(grid, rects);
+		destroyRects(grid, rects);
 		return NULL;
 	}
 	return rects;
 }
 
 // Free memory alocated for rects.
-void freeRects(Grid *grid, SDL_Rect **rects) {
+void destroyRects(Grid *grid, SDL_Rect **rects) {
 
 	for (unsigned int i = 0; i < grid->height; ++i)
 		free(rects[i]);
 	free(rects);
+	rects = NULL;
 }
 
 // Return pointer to texture (square) of given size and color or NULL on error.
@@ -106,10 +107,13 @@ Renderer *initRenderer(const char *windowName, Grid *grid, unsigned int cellSize
 
 // Release all SDL resources.
 void destroyRenderer(Grid *grid, Renderer *renderer) {
-	freeRects(grid, renderer->rects);
+	if (renderer == NULL) return;
+	destroyRects(grid, renderer->rects);
 	SDL_DestroyRenderer(renderer->SDLrenderer); // textures are also destroyed in this call
 	SDL_DestroyWindow(renderer->window);
 	SDL_Quit();
+	free(renderer);
+	renderer = NULL;
 }
 
 // Return pointer to SDL_Color or NULL on error.
@@ -122,4 +126,21 @@ SDL_Color *createSDLColor(unsigned char r, unsigned char g, unsigned char b) {
 	color->b = b;
 	color->a = 0;
 	return color;
+}
+
+// Return pointer to array of pointers to textures or NULL on error.
+int createTexturesFromColors(GridFile *config, Renderer *renderer) {
+	
+	renderer->textures = (SDL_Texture **)malloc(config->numColors * sizeof(SDL_Texture *));
+	if (renderer->textures == NULL) {
+		printf("createTexturesFromColors error: cannot allocate space.\n");
+		return 1;
+	}
+	for (int i = 0; i < config->numColors; ++i) {
+		renderer->textures[i] = createTexture(renderer->cellSize, config->colors[i], renderer->SDLrenderer);
+		if (renderer->textures[i] == NULL) {
+			return 1;
+		}
+	}
+	return 0;
 }

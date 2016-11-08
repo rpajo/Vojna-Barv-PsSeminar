@@ -12,7 +12,7 @@ Grid *createGrid(unsigned int width, unsigned int height) {
 	grid->height = height;
 	grid->colors = (unsigned char **)malloc(height * sizeof(unsigned char *));
 	if (grid->colors == NULL) {
-		printf("createGrid error: could not allocate space\n");
+		printf("createGrid error: could not allocate space.\n");
 		return NULL;
 	}
 	int error = 0;
@@ -25,38 +25,25 @@ Grid *createGrid(unsigned int width, unsigned int height) {
 	}
 	// Dealocate all allocated rows if error.
 	if (error) {
-		freeGrid(grid);
+		destroyGrid(grid);
 		return NULL;
 	}
 	return grid;
 }
 
 // Dealocate given grid.
-void freeGrid(Grid *grid) {
+void destroyGrid(Grid *grid) {
 
+	if (grid == NULL) return;
 	for (unsigned int i = 0; i < grid->height; ++i)
-		free(grid->colors[i]);
+		if (grid->colors[i] != NULL)
+			free(grid->colors[i]);
 	free(grid->colors);
 	free(grid);
+	grid = NULL;
 }
 
-
-// create new temporary color grid to hold new colors
-unsigned char **createNewGrid(unsigned int height, unsigned int width) {
-
-	unsigned char **newGrid = (unsigned char **)malloc(height * sizeof(unsigned char *));
-	if (newGrid == NULL) {
-		printf("createNewGrid error: could not allocate space for new grid\n");
-		return NULL;
-	}
-	for (unsigned int i = 0; i < height; ++i) {
-		newGrid[i] = (unsigned char *)calloc(width, sizeof(unsigned char));
-	}
-
-	return newGrid;
-}
-
-Grid *processGrid(Grid * grid, unsigned char **newGrid) {
+void processGrid(Grid * grid, Grid *tempGrid) {
 	// process each pixel
 
 	// length of the window to look for neighbors
@@ -73,8 +60,8 @@ Grid *processGrid(Grid * grid, unsigned char **newGrid) {
 	for (unsigned int y = 0; y < grid->height; y++) {
 		for (unsigned int x = 0; x < grid->width; x++) {
 			index = 0;
-			if (grid->colors[y][x] == 3) { // if cell is uncolorable(wall)
-				newGrid[y][x] = grid->colors[y][x];
+			if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
+				tempGrid->colors[y][x] = grid->colors[y][x];
 				continue; 
 			}
 			// look at cells inside the window and add them to array
@@ -85,7 +72,7 @@ Grid *processGrid(Grid * grid, unsigned char **newGrid) {
 					if (x + j >= 0 && x + j < grid->width) { // check that window is not out of bounds - x axis
 						if (grid->colors[y + i][x + j] != 0   // neighbor must not be blank - 0
 							&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
-							&& grid->colors[y + i][x + j] != 3	// don't add walls to neighbors
+							&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
 						) {
 							neighbors[index] = grid->colors[y + i][x + j];
 							index++;
@@ -96,20 +83,20 @@ Grid *processGrid(Grid * grid, unsigned char **newGrid) {
 			}
 			if (index > 0) {
 				int r = rand() % index;
-				newGrid[y][x] = neighbors[r];
+				tempGrid->colors[y][x] = neighbors[r];
 			}
-			else newGrid[y][x] = grid->colors[y][x];
+			else tempGrid->colors[y][x] = grid->colors[y][x];
 		}
 	}
-
-
+	unsigned char **tmp;
+	tmp = grid->colors;
+	grid->colors = tempGrid->colors;
+	tempGrid->colors = tmp;
+	/*
 	// copy the new color grid over the curent one
 	for (unsigned int i = 0; i < grid->height; ++i) {
-		memcpy(grid->colors[i], newGrid[i], grid->width * sizeof(char));
-	}
-
+		memcpy(grid->colors[i], tempGrid->colors[i], grid->width * sizeof(char));
+	}*/
 	free(neighbors);
-
-
-	return grid;
+	
 }
