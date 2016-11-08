@@ -43,11 +43,9 @@ void destroyGrid(Grid *grid) {
 	grid = NULL;
 }
 
-void processGrid(Grid * grid, Grid *tempGrid) {
-	// process each pixel
+void processGrid(Grid * grid, Grid *tempGrid, int window) {
 
 	// length of the window to look for neighbors
-	int window = 1; // curently only look at closest neighbors 1 unit from curent pixel
 	int windowSize = (1 + 2 * window);
 
 	// array of cells inside window
@@ -96,7 +94,7 @@ void processGrid(Grid * grid, Grid *tempGrid) {
 	// copy the new color grid over the curent one
 	for (unsigned int i = 0; i < grid->height; ++i) {
 		memcpy(grid->colors[i], tempGrid->colors[i], grid->width * sizeof(char));
-	}*/
+	}
+	*/
 	free(neighbors);
-	
 }
