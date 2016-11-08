@@ -56,11 +56,10 @@ unsigned char **createNewGrid(unsigned int height, unsigned int width) {
 	return newGrid;
 }
 
-Grid *processGrid(Grid * grid, unsigned char **newGrid) {
+Grid *processGrid(Grid * grid, unsigned char **newGrid, int window) {
 	// process each pixel
 
 	// length of the window to look for neighbors
-	int window = 1; // curently only look at closest neighbors 1 unit from curent pixel
 	int windowSize = (1 + 2 * window);
 
 	// array of cells inside window
