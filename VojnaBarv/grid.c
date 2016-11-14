@@ -53,7 +53,11 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 
 	int index = 0; // point to last neightbor added
 
-	srand(time(NULL));
+	//srand(time(NULL));
+
+	// rand_s handling variables
+	unsigned int r;
+	errno_t err;
 
 	for (unsigned int y = 0; y < grid->height; y++) {
 		for (unsigned int x = 0; x < grid->width; x++) {
@@ -63,7 +67,7 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 				continue; 
 			}
 			// look at cells inside the window and add them to array
-			for (int i = -window; i <= window; i++) {
+				for (int i = -window; i <= window; i++) {
 				for (int j = -window; j <= window; j++) {
 					if (y + i < 0 || y + i > grid->height - 1) break; // check if window is out of bounds  - y axis
 					//printf("x+j= %d\n", (x + j));
@@ -80,7 +84,11 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 				}
 			}
 			if (index > 0) {
-				int r = rand() % index;
+				//int r = rand() % index;
+				err = rand_s(&r);			// thread safe random()
+				r = r%index;
+				printf_s("  %u\n", r);
+
 				tempGrid->colors[y][x] = neighbors[r];
 			}
 			else tempGrid->colors[y][x] = grid->colors[y][x];
