@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
 	Grid *grid = config->initialGrid;
 	Grid *tempGrid = createGrid(grid->height, grid->width);
 	if (tempGrid == NULL) printf("main error: cannot allocate space for temporary grid.\n");
+	
 	Renderer *renderer = initRenderer(WINDOW_NAME, grid, config->cellSize);
 	if (renderer == NULL || createTexturesFromColors(config, renderer) != 0 || tempGrid == NULL) {
 		destroyRenderer(grid, renderer);
@@ -29,6 +30,10 @@ int main(int argc, char **argv) {
 	config->initialGrid = NULL;
 	destroyGridFile(config);
 
+	// pthreads
+	pthread_t threads[NTHREADS];
+
+	
 	LARGE_INTEGER frequency;        // ticks per second
 	LARGE_INTEGER t1, t2;           // ticks
 	double elapsedTime;
@@ -44,8 +49,12 @@ int main(int argc, char **argv) {
 	SDL_Event sdlEvent;
 	int run = 1;
 	while (run && iterations) {
-		
-		processGrid(grid, tempGrid, WINDOW);
+
+		for (i = 0; i<NTHREADS; i++)
+			pthread_create(&t[i], NULL, processGridPthreads, (void *)args);
+
+		for (i = 0; i<NTHREADS; i++)
+			pthread_join(t[i], NULL);
 		
 		// render grid and display rendered content
 		renderGrid(grid, renderer);
