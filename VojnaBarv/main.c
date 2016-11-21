@@ -4,6 +4,7 @@
 //#include "render.h"
 #include "grid.h"
 #include "file.h"
+#include <pthread.h>
 #include <Windows.h>
 
 #define WINDOW_NAME		"Vojna Barv"
