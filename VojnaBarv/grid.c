@@ -87,7 +87,7 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 				//int r = rand() % index;
 				err = rand_s(&r);			// thread safe random()
 				r = r%index;
-				printf_s("  %u\n", r);
+				//printf_s("  %u\n", r);
 
 				tempGrid->colors[y][x] = neighbors[r];
 			}

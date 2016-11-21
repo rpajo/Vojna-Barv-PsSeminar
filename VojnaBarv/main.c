@@ -10,10 +10,11 @@
 #define DELAY			((unsigned int) 100)
 #define ITERATIONS		500
 #define WINDOW			2
+#define FILE_NAME		"grid1.txt"
 
 int main(int argc, char **argv) {
 	
-	GridFile *config = parseFile("grid1.txt");
+	GridFile *config = parseFile(FILE_NAME);
 	if (config == NULL) return 1;
 	Grid *grid = config->initialGrid;
 	Grid *tempGrid = createGrid(grid->height, grid->width);
