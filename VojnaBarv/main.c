@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <SDL.h>
+//#include <SDL.h>
+//#include "render.h"
 #include "grid.h"
-#include "render.h"
 #include "file.h"
 #include <Windows.h>
 
@@ -10,6 +10,7 @@
 #define DELAY			((unsigned int) 100)
 #define ITERATIONS		500
 #define WINDOW			2
+#define NTHREADS		4
 
 int main(int argc, char **argv) {
 	
@@ -19,14 +20,14 @@ int main(int argc, char **argv) {
 	Grid *tempGrid = createGrid(grid->height, grid->width);
 	if (tempGrid == NULL) printf("main error: cannot allocate space for temporary grid.\n");
 	
-	Renderer *renderer = initRenderer(WINDOW_NAME, grid, config->cellSize);
+	/*Renderer *renderer = initRenderer(WINDOW_NAME, grid, config->cellSize);
 	if (renderer == NULL || createTexturesFromColors(config, renderer) != 0 || tempGrid == NULL) {
 		destroyRenderer(grid, renderer);
 		destroyGrid(grid);
 		destroyGrid(tempGrid);
 		destroyGridFile(config);
 		return 1;
-	}
+	}*/
 	config->initialGrid = NULL;
 	destroyGridFile(config);
 
@@ -46,7 +47,7 @@ int main(int argc, char **argv) {
 
 	unsigned int iterations = ITERATIONS;
 	
-	SDL_Event sdlEvent;
+	//SDL_Event sdlEvent;
 	int run = 1;
 	while (run && iterations) {
 
@@ -56,7 +57,7 @@ int main(int argc, char **argv) {
 		for (i = 0; i<NTHREADS; i++)
 			pthread_join(t[i], NULL);
 		
-		// render grid and display rendered content
+		/*// render grid and display rendered content
 		renderGrid(grid, renderer);
 		SDL_RenderPresent(renderer->SDLrenderer);
 
@@ -65,7 +66,7 @@ int main(int argc, char **argv) {
 			if (sdlEvent.type == SDL_QUIT) // window's X button
 				run = 0;
 		// delay in miliseconds
-		SDL_Delay(DELAY);
+		SDL_Delay(DELAY);*/
 		
 		iterations--;
 	}
@@ -75,7 +76,7 @@ int main(int argc, char **argv) {
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	printf("%f ms\n", elapsedTime);
 
-	destroyRenderer(grid, renderer);
+	//destroyRenderer(grid, renderer);
 	//destroyGrid(grid);
 	//destroyGrid(tempGrid);
 	return 0;
