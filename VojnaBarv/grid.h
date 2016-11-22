@@ -1,6 +1,8 @@
 #ifndef GRID_HEADER
 #define GRID_HEADER
 
+#define NTHREADS	4
+
 typedef struct Grid {
 
 	unsigned int width;
@@ -9,13 +11,15 @@ typedef struct Grid {
 
 } Grid;
 
-typedef struct ProcessArgs {
+typedef struct ThreadArgs {
 
 	Grid *grid;
 	Grid *tempGrid;
-	int windowSize;
-	int threadIx;
-} ProcessArgs;
+	unsigned int window;
+	unsigned int ix;
+	pthread_barrier_t *barrier;
+
+} ThreadArgs;
 
 Grid *createGrid(unsigned int width, unsigned int height);
 void destroyGrid(Grid *grid);

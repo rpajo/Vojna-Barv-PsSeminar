@@ -3,8 +3,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include "grid.h"
+#include <pthread.h>
 
-#define NTHREADS	4
+extern unsigned int iterations;
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -111,87 +112,80 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 
 void processGridPthread(void *arg) {
 
-	ProcessArgs *args = arg;
-	int window = args->windowSize;
+	// setup variables from args
+	ThreadArgs *args = arg;
+	int window = args->window;
+	Grid *grid = args->grid;
+	Grid *tempGrid = args->tempGrid;
+	unsigned int ix = (unsigned int)args->ix;
+	unsigned int start = (unsigned int)(grid->height / (double)NTHREADS * ix);
+	unsigned int stop = (unsigned int)(grid->height / (double)NTHREADS * ix);
+	pthread_barrier_t *barrier = args->barrier;
 
 	// length of the window to look for neighbors
-	int windowSize = (1 + 2 * args->windowSize);
+	int windowSize = (1 + 2 * window);
 
 	// EVERY THREAD HAS TO HAVE ITS OWN neighbors!!!
 	// array of cells inside window
 	int *neighbors = (int *)calloc(windowSize * windowSize - 1, sizeof(int));
 
 	int index = 0; // point to last neightbor added
-
-				   //srand(time(NULL));
-
-				   // rand_s handling variables
 	unsigned int r;
 	errno_t err;
 
-	Grid *grid = args->grid;
-	Grid *tempGrid = args->tempGrid;
+	while (iterations) {
 
-	unsigned int ix = (unsigned int)args->threadIx;
-	unsigned int start = (unsigned int)(grid->height / (double)NTHREADS * ix);
-	unsigned int stop = (unsigned int)(grid->height / (double)NTHREADS * ix);
-
-	pthread_barrier_t barrier;
-	pthread_init_barrier(&barrier, NULL, NTHREADS);
-
-	for (unsigned int y = start; y < stop; y++) {
-		for (unsigned int x = 0; x < grid->width; x++) {
-			index = 0;
-			if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
-				tempGrid->colors[y][x] = grid->colors[y][x];
-				continue;
-			}
-			// look at cells inside the window and add them to array
-			for (int i = -window; i <= window; i++) {
-				for (int j = -window; j <= window; j++) {
-					if (y + i < 0 || y + i > grid->height - 1) break; // check if window is out of bounds  - y axis
-																	  //printf("x+j= %d\n", (x + j));
-					if (x + j >= 0 && x + j < grid->width) { // check that window is not out of bounds - x axis
-						if (grid->colors[y + i][x + j] != 0   // neighbor must not be blank - 0
-							&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
-							&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
-							) {
-							neighbors[index] = grid->colors[y + i][x + j];
-							index++;
-						}
-					}
-
+		for (unsigned int y = start; y < stop; y++) {
+			for (unsigned int x = 0; x < grid->width; x++) {
+				index = 0;
+				if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
+					tempGrid->colors[y][x] = grid->colors[y][x];
+					continue;
 				}
-			}
-			if (index > 0) {
-				//int r = rand() % index;
-				err = rand_s(&r);			// thread safe random()
-				r = r%index;
-				//printf_s("  %u\n", r);
+				// look at cells inside the window and add them to array
+				for (int i = -window; i <= window; i++) {
+					for (int j = -window; j <= window; j++) {
+						if (y + i < 0 || y + i > grid->height - 1) break; // check if window is out of bounds  - y axis
+																		  //printf("x+j= %d\n", (x + j));
+						if (x + j >= 0 && x + j < grid->width) { // check that window is not out of bounds - x axis
+							if (grid->colors[y + i][x + j] != 0   // neighbor must not be blank - 0
+								&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
+								&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
+								) {
+								neighbors[index] = grid->colors[y + i][x + j];
+								index++;
+							}
+						}
 
-				tempGrid->colors[y][x] = neighbors[r];
+					}
+				}
+				if (index > 0) {
+					//int r = rand() % index;
+					err = rand_s(&r);			// thread safe random()
+					r = r%index;
+					//printf_s("  %u\n", r);
+
+					tempGrid->colors[y][x] = neighbors[r];
+				}
+				else tempGrid->colors[y][x] = grid->colors[y][x];
 			}
-			else tempGrid->colors[y][x] = grid->colors[y][x];
 		}
+
+		// Threads have to wait here for all other threads to finish working.
+		pthread_barrier_wait(barrier);
+
+
+		if (ix == 0) { // Then, only one thread can swap the grids and decrease iterations.
+			unsigned char **tmp;
+			tmp = grid->colors;
+			grid->colors = tempGrid->colors;
+			tempGrid->colors = tmp;
+			iterations--;
+		}
+
+		// Threads have to wait here again to ensure that flow doesn't continue before
+		// grids are swapped.
+		pthread_barrier_wait(barrier);
 	}
-
-
-	// Threads have to wait here for all other threads to finish working.
-	pthread_barrier_wait(&barrier);
-
-
-	if (ix == 0) { // Then, only one thread can swap the grids.
-		unsigned char **tmp;
-		tmp = grid->colors;
-		grid->colors = tempGrid->colors;
-		tempGrid->colors = tmp;
-	}
-
-
-	// Threads have to wait here again to ensure that flow doesn't continue before
-	// grids are swapped.
-	pthread_barrier_wait(&barrier);
-	
-
 	free(neighbors);
 }

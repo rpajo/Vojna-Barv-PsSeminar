@@ -11,7 +11,8 @@
 #define DELAY			((unsigned int) 100)
 #define ITERATIONS		500
 #define WINDOW			2
-#define NTHREADS		4
+
+unsigned int iterations = 500;
 
 int main(int argc, char **argv) {
 	
@@ -34,6 +35,8 @@ int main(int argc, char **argv) {
 
 	// pthreads
 	pthread_t threads[NTHREADS];
+	pthread_barrier_t barrier;
+	pthread_init_barrier(&barrier, NULL, NTHREADS);
 
 	
 	LARGE_INTEGER frequency;        // ticks per second
