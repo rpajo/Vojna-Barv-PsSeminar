@@ -68,21 +68,20 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 			}
 			// look at cells inside the window and add them to array
 				for (int i = -window; i <= window; i++) {
-				for (int j = -window; j <= window; j++) {
-					if (y + i < 0 || y + i > grid->height - 1) break; // check if window is out of bounds  - y axis
-					//printf("x+j= %d\n", (x + j));
-					if (x + j >= 0 && x + j < grid->width) { // check that window is not out of bounds - x axis
-						if (grid->colors[y + i][x + j] != 0   // neighbor must not be blank - 0
-							&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
-							&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
-						) {
-							neighbors[index] = grid->colors[y + i][x + j];
-							index++;
+					for (int j = -window; j <= window; j++) {
+						if (y + i < 0 || y + i > grid->height - 1) break; // check if window is out of bounds  - y axis
+						//printf("x+j= %d\n", (x + j));
+						if (x + j >= 0 && x + j < grid->width) { // check that window is not out of bounds - x axis
+							if (grid->colors[y + i][x + j] != 0   // neighbor must not be blank - 0
+								&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
+								&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
+							) {
+								neighbors[index] = grid->colors[y + i][x + j];
+								index++;
+							}
 						}
 					}
-					
 				}
-			}
 			if (index > 0) {
 				//int r = rand() % index;
 				err = rand_s(&r);			// thread safe random()
