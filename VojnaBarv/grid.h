@@ -1,7 +1,8 @@
+#define HAVE_STRUCT_TIMESPEC
+#include <pthread.h>
+
 #ifndef GRID_HEADER
 #define GRID_HEADER
-
-#define NTHREADS	4
 
 typedef struct Grid {
 
@@ -24,6 +25,6 @@ typedef struct ThreadArgs {
 Grid *createGrid(unsigned int width, unsigned int height);
 void destroyGrid(Grid *grid);
 void processGrid(Grid *grid, Grid *tempGrid, int window);
-void processGridPthread(void *arg);
+void *processGridPthread(void *arg);
 
 #endif

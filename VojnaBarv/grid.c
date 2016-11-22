@@ -6,6 +6,8 @@
 #include <pthread.h>
 
 extern unsigned int iterations;
+extern unsigned int nthreads;
+extern ThreadArgs args;
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -110,17 +112,20 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	free(neighbors);
 }
 
-void processGridPthread(void *arg) {
+void *processGridPthread(void *arg) {
 
-	// setup variables from args
-	ThreadArgs *args = arg;
-	int window = args->window;
-	Grid *grid = args->grid;
-	Grid *tempGrid = args->tempGrid;
-	unsigned int ix = (unsigned int)args->ix;
-	unsigned int start = (unsigned int)(grid->height / (double)NTHREADS * ix);
-	unsigned int stop = (unsigned int)(grid->height / (double)NTHREADS * ix);
-	pthread_barrier_t *barrier = args->barrier;
+	// setup variables from global args
+	int window = args.window;
+	Grid *grid = args.grid;
+	Grid *tempGrid = args.tempGrid;
+
+	unsigned int ix = (unsigned int)arg;
+
+	unsigned int start = (unsigned int)(grid->height / (double)nthreads * ix);
+	unsigned int stop = (unsigned int)(grid->height / (double)nthreads * (ix + 1));
+	printf("Thread: %d\ -- start: %d, stop: %d\n",ix, start, stop);
+
+	pthread_barrier_t *barrier = args.barrier;
 
 	// length of the window to look for neighbors
 	int windowSize = (1 + 2 * window);
@@ -172,7 +177,8 @@ void processGridPthread(void *arg) {
 		}
 
 		// Threads have to wait here for all other threads to finish working.
-		pthread_barrier_wait(barrier);
+
+		pthread_barrier_wait( &barrier );
 
 
 		if (ix == 0) { // Then, only one thread can swap the grids and decrease iterations.
@@ -185,7 +191,7 @@ void processGridPthread(void *arg) {
 
 		// Threads have to wait here again to ensure that flow doesn't continue before
 		// grids are swapped.
-		pthread_barrier_wait(barrier);
+		pthread_barrier_wait( &barrier );
 	}
 	free(neighbors);
 }
