@@ -57,7 +57,7 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 
 	// rand_s handling variables
 	unsigned int r;
-	errno_t err;
+	int err;
 
 	for (unsigned int y = 0; y < grid->height; y++) {
 		for (unsigned int x = 0; x < grid->width; x++) {
