@@ -49,19 +49,24 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	int windowSize = (1 + 2 * window);
 
 	// array of cells inside window
-	int *neighbors = (int *)calloc(windowSize * windowSize -1, sizeof(int));
+	int *neighbors = (int *)calloc( (windowSize * windowSize -1) * omp_get_max_threads(), sizeof(int));
 
-	int index = 0; // point to last neightbor added
+	//int index = 0; // point to last neightbor added
 
-	//srand(time(NULL));
+	srand(time(NULL));
 
-	// rand_s handling variables
-	unsigned int r;
-	int err;
 
-	for (unsigned int y = 0; y < grid->height; y++) {
-		for (unsigned int x = 0; x < grid->width; x++) {
-			index = 0;
+	int y, x;
+	int width = (int)grid->width;
+	int height = (int)grid->height;
+
+	
+#pragma omp parallel for private(y, x)
+	for (y = 0; y < height; y++) {
+		//int id = omp_get_thread_num();
+		//printf("Thread id: %d on y:%d\n", id, y);
+		for (x = 0; x <width; x++) {
+			int index = 0;
 			if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
 				tempGrid->colors[y][x] = grid->colors[y][x];
 				continue; 
@@ -69,22 +74,21 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 			// look at cells inside the window and add them to array
 				for (int i = -window; i <= window; i++) {
 					for (int j = -window; j <= window; j++) {
-						if (y + i < 0 || y + i > grid->height - 1) break; // check if window is out of bounds  - y axis
+						if (y + i < 0 || y + i > height - 1) break; // check if window is out of bounds  - y axis
 						//printf("x+j= %d\n", (x + j));
-						if (x + j >= 0 && x + j < grid->width) { // check that window is not out of bounds - x axis
-							if (grid->colors[y + i][x + j] != 0   // neighbor must not be blank - 0
+						if (x + j >= 0 && x + j < width) {			// check that window is not out of bounds - x axis
+							if (grid->colors[y + i][x + j] != 0		// neighbor must not be blank - 0
 								&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
 								&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
 							) {
-								neighbors[index] = grid->colors[y + i][x + j];
+								neighbors[index + (windowSize * windowSize - 1) * omp_get_thread_num()] = grid->colors[y + i][x + j];
 								index++;
 							}
 						}
 					}
 				}
 			if (index > 0) {
-				//int r = rand() % index;
-				err = rand_s(&r);			// thread safe random()
+				int r = rand() % index;
 				r = r%index;
 				//printf_s("  %u\n", r);
 
