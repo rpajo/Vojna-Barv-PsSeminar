@@ -1,6 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "file.h"
-#include "render.h"
 #include "grid.h"
 
 #define COLOR_FORMAT		"%d,%d,%d"
@@ -93,7 +93,7 @@ int parseDimensions(FILE *file, GridFile *config) {
 	return 0;
 }
 
-// Allocate array of SDL_Colors or set NULL pointer to colors in config on error.
+// Allocate array of RGBColors or set NULL pointer to colors in config on error.
 //
 // Function tries to allocate space for all colors. If error happens any time
 // in process then all allocated space is freed and pointer set to NULL.
@@ -108,36 +108,24 @@ int parseColors(FILE *file, GridFile *config) {
 		printf("parseColors error: number of colors less than 1.\n");
 		return 1;
 	}
-	config->colors = (SDL_Color **)malloc(config->numColors * sizeof(SDL_Color *));
+	config->colors = (RGBColor *)malloc(config->numColors * sizeof(RGBColor));
 	if (config->colors == NULL) {
 		printf("parseColors error: could not allocate array of colors.\n");
 		return 1;
 	}
 	unsigned int r, g, b, error = 0;
 	for (int i = 0; i < config->numColors; ++i) {
-		if (error) {
-			config->colors[i] = NULL;
-			continue;
-		}
 		if (fscanf(file, COLOR_FORMAT, &r, &g, &b) <= 0) {
 			printf("parseColors error: could not read color %d.\n", i);
-			config->colors[i] = NULL;
-			error = 1;
+			free(config->colors);
+			config->colors = NULL;
+			return 1;
 		}
 		else {
-			config->colors[i] = createSDLColor(r, g, b);
-			if (config->colors[i] == NULL) {
-				printf("parseColors error: could not create color.\n");
-				error = 1;
-			}
+			config->colors[i].r = r;
+			config->colors[i].g = g;
+			config->colors[i].b = b;
 		}
-	}
-	if (error) {
-		for (int i = 0; i < config->numColors; ++i)
-			if (config->colors[i] != NULL)
-				free(config->colors[i]);
-		free(config->colors);
-		return 1;
 	}
 	return 0;
 }
@@ -199,16 +187,10 @@ int parseFileType1(FILE * file, GridFile * config) {
 // Release all resources.
 void destroyGridFile(GridFile *config) {
 
-	if (config->colors != NULL) {
-		for (int i = 0; i < config->numColors; ++i)
-			if (config->colors[i] != NULL)
-				free(config->colors[i]);
+	if (config->colors != NULL)
 		free(config->colors);
-	}
-
-	if (config->initialGrid != NULL) {
+	if (config->initialGrid != NULL)
 		destroyGrid(config->initialGrid);
-	}
 	free(config);
 	config = NULL;
 }

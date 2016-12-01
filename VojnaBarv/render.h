@@ -20,7 +20,7 @@ SDL_Rect **initRects(Grid *grid, unsigned int cellSize);
 void destroyRects(Grid *grid, SDL_Rect **rects);
 Renderer *initRenderer(const char *windowName, Grid *grid, unsigned int cellSize);
 void destroyRenderer(Grid *grid, Renderer *renderer);
-SDL_Texture *createTexture(unsigned int size, SDL_Color *color, SDL_Renderer *SDLrenderer);
+SDL_Texture *createTexture(unsigned int size, RGBColor *color, SDL_Renderer *SDLrenderer);
 void renderGrid(Grid *grid, Renderer *renderer);
 SDL_Color *createSDLColor(unsigned char r, unsigned char g, unsigned char b);
 int createTexturesFromColors(GridFile *config, Renderer *renderer);
