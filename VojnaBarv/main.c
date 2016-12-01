@@ -4,7 +4,8 @@
 //#include "render.h"
 #include "grid.h"
 #include "file.h"
-#include <Windows.h>
+//#include <Windows.h>
+#include <omp.h>
 
 //#define WINDOW_NAME		"Vojna Barv"
 //#define DELAY			((unsigned int) 100)
@@ -30,15 +31,8 @@ int main(int argc, char **argv) {
 	config->initialGrid = NULL;
 	destroyGridFile(config);
 
-	LARGE_INTEGER frequency;        // ticks per second
-	LARGE_INTEGER t1, t2;           // ticks
-	double elapsedTime;
 
-	// get ticks per second
-	QueryPerformanceFrequency(&frequency);
-
-	/////// TIMER START ///////
-	QueryPerformanceCounter(&t1);
+	double startTime = omp_get_wtime();
 
 	unsigned int iterations = ITERATIONS;
 	
@@ -62,10 +56,8 @@ int main(int argc, char **argv) {
 		iterations--;
 	}
 
-	// end time
-	QueryPerformanceCounter(&t2);
-	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
-	printf("%f ms\n", elapsedTime);
+	double endTime = omp_get_wtime();
+	printf("%f s\n", endTime-startTime);
 
 	//destroyRenderer(grid, renderer);
 	//destroyGrid(grid);

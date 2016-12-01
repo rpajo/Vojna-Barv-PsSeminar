@@ -3,6 +3,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include "grid.h"
+#include <omp.h>
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -55,23 +56,24 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 
 	srand(time(NULL));
 
-
-	int y, x;
+	int x, y;
 	int width = (int)grid->width;
 	int height = (int)grid->height;
 
-	
-#pragma omp parallel for private(y, x)
-	for (y = 0; y < height; y++) {
-		//int id = omp_get_thread_num();
-		//printf("Thread id: %d on y:%d\n", id, y);
-		for (x = 0; x <width; x++) {
-			int index = 0;
-			if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
-				tempGrid->colors[y][x] = grid->colors[y][x];
-				continue; 
-			}
-			// look at cells inside the window and add them to array
+#pragma omp parallel 
+	{
+		int offset = (windowSize * windowSize - 1) * omp_get_thread_num();
+#pragma omp for private(y, x)
+		for (y = 0; y < height; y++) {
+			//int id = omp_get_thread_num();
+			//printf("Thread id: %d on y:%d\n", id, y);
+			for (x = 0; x < width; x++) {
+				int index = 0;
+				if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
+					tempGrid->colors[y][x] = grid->colors[y][x];
+					continue;
+				}
+				// look at cells inside the window and add them to array
 				for (int i = -window; i <= window; i++) {
 					for (int j = -window; j <= window; j++) {
 						if (y + i < 0 || y + i > height - 1) break; // check if window is out of bounds  - y axis
@@ -80,21 +82,22 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 							if (grid->colors[y + i][x + j] != 0		// neighbor must not be blank - 0
 								&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
 								&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
-							) {
-								neighbors[index + (windowSize * windowSize - 1) * omp_get_thread_num()] = grid->colors[y + i][x + j];
+								) {
+								neighbors[index + offset] = grid->colors[y + i][x + j];
 								index++;
 							}
 						}
 					}
 				}
-			if (index > 0) {
-				int r = rand() % index;
-				r = r%index;
-				//printf_s("  %u\n", r);
+				if (index > 0) {
+					int r = rand() % index;
+					r = r%index;
+					//printf_s("  %u\n", r);
 
-				tempGrid->colors[y][x] = neighbors[r];
+					tempGrid->colors[y][x] = neighbors[r];
+				}
+				else tempGrid->colors[y][x] = grid->colors[y][x];
 			}
-			else tempGrid->colors[y][x] = grid->colors[y][x];
 		}
 	}
 	unsigned char **tmp;
