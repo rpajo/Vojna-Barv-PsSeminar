@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <stdlib.h>
 #include "grid.h"
 #include <pthread.h>
 
@@ -57,8 +55,6 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	int *neighbors = (int *)calloc(windowSize * windowSize -1, sizeof(int));
 
 	int index = 0; // point to last neightbor added
-
-	//srand(time(NULL));
 
 	// rand_s handling variables
 	unsigned int r;
@@ -178,7 +174,7 @@ void *processGridPthread(void *arg) {
 
 		// Threads have to wait here for all other threads to finish working.
 
-		pthread_barrier_wait( &barrier );
+		pthread_barrier_wait( barrier );
 
 
 		if (ix == 0) { // Then, only one thread can swap the grids and decrease iterations.
@@ -191,7 +187,8 @@ void *processGridPthread(void *arg) {
 
 		// Threads have to wait here again to ensure that flow doesn't continue before
 		// grids are swapped.
-		pthread_barrier_wait( &barrier );
+		pthread_barrier_wait( barrier );
 	}
 	free(neighbors);
+	return NULL;
 }

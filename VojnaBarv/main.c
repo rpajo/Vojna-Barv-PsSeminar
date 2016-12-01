@@ -67,7 +67,7 @@ int main(int argc, char **argv) {
 	args.grid = grid;
 	args.tempGrid = tempGrid;
 	args.window = WINDOW;
-	args.barrier = barrier;
+	args.barrier = &barrier;
 	
 	//SDL_Event sdlEvent;
 
