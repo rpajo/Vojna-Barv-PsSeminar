@@ -45,7 +45,7 @@ void destroyRects(Grid *grid, SDL_Rect **rects) {
 }
 
 // Return pointer to texture (square) of given size and color or NULL on error.
-SDL_Texture *createTexture(unsigned int size, SDL_Color *color, SDL_Renderer *SDLrenderer) {
+SDL_Texture *createTexture(unsigned int size, RGBColor *color, SDL_Renderer *SDLrenderer) {
 
 	// Create surface, use 32-bit depth with default masks.
 	SDL_Surface *surface = SDL_CreateRGBSurface(0, size, size, 32, 0, 0, 0, 0);
@@ -137,7 +137,7 @@ int createTexturesFromColors(GridFile *config, Renderer *renderer) {
 		return 1;
 	}
 	for (int i = 0; i < config->numColors; ++i) {
-		renderer->textures[i] = createTexture(renderer->cellSize, config->colors[i], renderer->SDLrenderer);
+		renderer->textures[i] = createTexture(renderer->cellSize, &config->colors[i], renderer->SDLrenderer);
 		if (renderer->textures[i] == NULL) {
 			return 1;
 		}
