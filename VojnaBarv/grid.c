@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "grid.h"
+#include "pcg_basic.h"
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -51,11 +53,13 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 
 	int index = 0; // point to last neightbor added
 
-	//srand(time(NULL));
-
-	// rand_s handling variables
+	// Initialize random.
+	// Third argument determines the position where sequence of random numbers
+	// should start. To give some variation, pointer is assigned which should
+	// be nondeterministic.
+	pcg32_random_t rng;
+	pcg32_srandom_r(&rng, (uint64_t)time(NULL), (uint64_t)&rng);
 	unsigned int r;
-	errno_t err;
 
 	for (unsigned int y = 0; y < grid->height; y++) {
 		for (unsigned int x = 0; x < grid->width; x++) {
@@ -81,11 +85,7 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 					}
 				}
 			if (index > 0) {
-				//int r = rand() % index;
-				err = rand_s(&r);			// thread safe random()
-				r = r%index;
-				//printf_s("  %u\n", r);
-
+				r = pcg32_boundedrand_r(&rng, index);
 				tempGrid->colors[y][x] = neighbors[r];
 			}
 			else tempGrid->colors[y][x] = grid->colors[y][x];
@@ -95,11 +95,6 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	tmp = grid->colors;
 	grid->colors = tempGrid->colors;
 	tempGrid->colors = tmp;
-	/*
-	// copy the new color grid over the curent one
-	for (unsigned int i = 0; i < grid->height; ++i) {
-		memcpy(grid->colors[i], tempGrid->colors[i], grid->width * sizeof(char));
-	}
-	*/
+
 	free(neighbors);
 }
