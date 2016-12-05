@@ -1,7 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
-#include <stdlib.h>
 #include "grid.h"
 
 // Return pointer to Grid with given dimensions or return NULL.

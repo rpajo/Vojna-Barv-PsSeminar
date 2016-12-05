@@ -2,7 +2,14 @@
 #define FILE_HEADER
 
 #include "grid.h"
-#include <SDL.h>
+
+typedef struct RGBColor {
+
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+
+} RGBColor;
 
 typedef struct GridFile {
 
@@ -11,7 +18,7 @@ typedef struct GridFile {
 	int cellSize;
 	Grid *initialGrid;
 	int numColors;
-	SDL_Color **colors;
+	RGBColor *colors;
 
 } GridFile;
 
