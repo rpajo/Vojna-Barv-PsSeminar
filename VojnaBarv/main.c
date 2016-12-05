@@ -5,12 +5,16 @@
 #include "render.h"
 #include "file.h"
 #include <Windows.h>
+#include "pcg_basic.h"
+#include <time.h>
 
 #define WINDOW_NAME		"Vojna Barv"
 #define DELAY			((unsigned int) 100)
 #define ITERATIONS		500
 #define WINDOW			2
 #define FILE_NAME		"grid1.txt"
+
+pcg32_random_t rng;
 
 int main(int argc, char **argv) {
 	
@@ -41,6 +45,12 @@ int main(int argc, char **argv) {
 	QueryPerformanceCounter(&t1);
 
 	unsigned int iterations = ITERATIONS;
+
+	// Initialize random.
+	// Third argument determines the position where sequence of random numbers
+	// should start. To give some variation, pointer is assigned which should
+	// be nondeterministic.
+	pcg32_srandom_r(&rng, (uint64_t)time(NULL), (uint64_t)&rng);
 	
 	SDL_Event sdlEvent;
 	int run = 1;

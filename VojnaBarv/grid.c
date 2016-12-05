@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include "grid.h"
 #include "pcg_basic.h"
+
+extern pcg32_random_t rng;
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -53,12 +54,7 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 
 	int index = 0; // point to last neightbor added
 
-	// Initialize random.
-	// Third argument determines the position where sequence of random numbers
-	// should start. To give some variation, pointer is assigned which should
-	// be nondeterministic.
-	pcg32_random_t rng;
-	pcg32_srandom_r(&rng, (uint64_t)time(NULL), (uint64_t)&rng);
+	// var for random numbers
 	unsigned int r;
 
 	for (unsigned int y = 0; y < grid->height; y++) {
