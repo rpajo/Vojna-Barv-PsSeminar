@@ -3,6 +3,9 @@
 #include <time.h>
 #include "grid.h"
 #include <omp.h>
+#include "pcg_basic.h"
+
+extern pcg32_random_t rngs[];
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -51,17 +54,14 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	// array of cells inside window
 	int *neighbors = (int *)calloc( (windowSize * windowSize -1) * omp_get_max_threads(), sizeof(int));
 
-	//int index = 0; // point to last neightbor added
-
-	srand(time(NULL));
-
 	int x, y;
 	int width = (int)grid->width;
 	int height = (int)grid->height;
 
 #pragma omp parallel 
 	{
-		int offset = (windowSize * windowSize - 1) * omp_get_thread_num();
+		int ix = omp_get_thread_num();
+		int offset = (windowSize * windowSize - 1) * ix;
 #pragma omp for private(y, x)
 		for (y = 0; y < height; y++) {
 			//int id = omp_get_thread_num();
@@ -89,10 +89,7 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 					}
 				}
 				if (index > 0) {
-					int r = rand() % index;
-					r = r%index;
-					//printf_s("  %u\n", r);
-
+					int r = pcg32_boundedrand_r(&rngs[ix], index);
 					tempGrid->colors[y][x] = neighbors[r];
 				}
 				else tempGrid->colors[y][x] = grid->colors[y][x];
@@ -103,11 +100,6 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	tmp = grid->colors;
 	grid->colors = tempGrid->colors;
 	tempGrid->colors = tmp;
-	/*
-	// copy the new color grid over the curent one
-	for (unsigned int i = 0; i < grid->height; ++i) {
-		memcpy(grid->colors[i], tempGrid->colors[i], grid->width * sizeof(char));
-	}
-	*/
+	
 	free(neighbors);
 }

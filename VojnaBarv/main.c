@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <omp.h>
 
 #include "grid.h"
 #include "file.h"
+#include "pcg_basic.h"
 
 #define USE_SDL // use SDL - comment to not use
 
@@ -17,6 +19,9 @@
 #define ITERATIONS		30000
 #define WINDOW			2
 #define FILE_NAME		"grid1.txt"
+#define NTHREADS		2
+
+pcg32_random_t rngs[NTHREADS];
 
 int main(int argc, char **argv) {
 	
@@ -39,7 +44,16 @@ int main(int argc, char **argv) {
 
 	config->initialGrid = NULL;
 	destroyGridFile(config);
+
 	unsigned int iterations = ITERATIONS;
+	omp_set_num_threads(NTHREADS);
+
+	// Initialize random states.
+	// Third argument determines the position where sequence of random numbers
+	// should start. To give some variation, pointer is assigned which should
+	// be nondeterministic.
+	for (int i = 0; i < NTHREADS; ++i)
+		pcg32_srandom_r(&rngs[i], (uint64_t)time(NULL), (uint64_t)&rngs[i]);
 
 #ifdef USE_SDL
 	SDL_Event sdlEvent;
