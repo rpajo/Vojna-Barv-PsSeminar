@@ -113,7 +113,7 @@ int parseColors(FILE *file, GridFile *config) {
 		printf("parseColors error: could not allocate array of colors.\n");
 		return 1;
 	}
-	unsigned int r, g, b, error = 0;
+	unsigned int r, g, b;
 	for (int i = 0; i < config->numColors; ++i) {
 		if (fscanf(file, COLOR_FORMAT, &r, &g, &b) <= 0) {
 			printf("parseColors error: could not read color %d.\n", i);

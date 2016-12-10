@@ -11,7 +11,7 @@
 #include <Windows.h>
 #endif
 
-#define USE_SDL // use SDL - comment to not use
+//#define USE_SDL // use SDL - comment to not use
 
 #ifdef USE_SDL
 #include <SDL.h>
@@ -20,9 +20,9 @@
 #define DELAY			((unsigned int) 100)
 #endif
 
-#define ITERATIONS		500
+#define ITERATIONS		30000
 #define WINDOW			2
-#define FILE_NAME		"grid1.txt"
+#define FILE_NAME		"grid3.txt"
 
 pcg32_random_t rng;
 
@@ -64,6 +64,10 @@ int main(int argc, char **argv) {
 	
 	/////// TIMER START ///////
 	QueryPerformanceCounter(&t1);
+#elif defined __gnu_linux__
+	struct timespec t1, t2;
+	double elapsedTime;
+	clock_gettime(CLOCK_REALTIME, &t1);
 #endif
 
 #ifdef USE_SDL
@@ -95,6 +99,11 @@ int main(int argc, char **argv) {
 	QueryPerformanceCounter(&t2);
 	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
 	printf("%f ms\n", elapsedTime);
+#elif defined __gnu_linux__
+	clock_gettime(CLOCK_REALTIME, &t2);
+	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;
+	elapsedTime += (t2.tv_nsec - t1.tv_nsec) / 1000000.0;
+	printf("%f ms \n", elapsedTime);
 #endif
 
 #ifdef USE_SDL
