@@ -17,11 +17,12 @@
 #endif
 
 #define ITERATIONS		30000
-#define WINDOW			2
+#define WINDOW			1
 #define FILE_NAME		"grid1.txt"
-#define NTHREADS		2
+#define NTHREADS		8
 
 pcg32_random_t rngs[NTHREADS];
+int nthreads = NTHREADS;
 
 int main(int argc, char **argv) {
 	
@@ -64,7 +65,7 @@ int main(int argc, char **argv) {
 
 	while (iterations--) {
 		
-		processGrid(grid, tempGrid, WINDOW);
+		
 
 #ifdef USE_SDL
 		// render grid and display rendered content
@@ -80,6 +81,8 @@ int main(int argc, char **argv) {
 		// delay in miliseconds
 		SDL_Delay(DELAY);
 #endif
+
+		processGrid(grid, tempGrid, WINDOW);
 	}
 
 	double endTime = omp_get_wtime();

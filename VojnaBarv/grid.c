@@ -6,6 +6,7 @@
 #include "pcg_basic.h"
 
 extern pcg32_random_t rngs[];
+extern nthreads;
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -52,16 +53,16 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	int windowSize = (1 + 2 * window);
 
 	// array of cells inside window
-	int *neighbors = (int *)calloc( (windowSize * windowSize -1) * omp_get_max_threads(), sizeof(int));
-
+	int *neighbors = (int *)calloc( (windowSize * windowSize -1) * nthreads, sizeof(int));
 	int x, y;
 	int width = (int)grid->width;
 	int height = (int)grid->height;
 
-#pragma omp parallel 
+#pragma omp parallel
 	{
-		int ix = omp_get_thread_num();
+		int ix = omp_get_thread_num();		
 		int offset = (windowSize * windowSize - 1) * ix;
+
 #pragma omp for private(y, x)
 		for (y = 0; y < height; y++) {
 			//int id = omp_get_thread_num();
@@ -90,7 +91,7 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 				}
 				if (index > 0) {
 					int r = pcg32_boundedrand_r(&rngs[ix], index);
-					tempGrid->colors[y][x] = neighbors[r];
+					tempGrid->colors[y][x] = neighbors[r + offset];
 				}
 				else tempGrid->colors[y][x] = grid->colors[y][x];
 			}
