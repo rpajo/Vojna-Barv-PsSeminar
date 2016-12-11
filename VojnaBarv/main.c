@@ -7,7 +7,7 @@
 #include "file.h"
 #include "pcg_basic.h"
 
-#define USE_SDL // use SDL - comment to not use
+//#define USE_SDL // use SDL - comment to not use
 
 #ifdef USE_SDL
 #include <SDL.h>
@@ -17,9 +17,9 @@
 #endif
 
 #define ITERATIONS		30000
-#define WINDOW			1
-#define FILE_NAME		"grid1.txt"
-#define NTHREADS		8
+#define WINDOW			2
+#define FILE_NAME		"grid3.txt"
+#define NTHREADS		2
 
 pcg32_random_t rngs[NTHREADS];
 int nthreads = NTHREADS;

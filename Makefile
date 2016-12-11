@@ -1,29 +1,35 @@
 NAME = VojnaBarv
-CFLAGS = -O2 -std=c99 -Wall
+CFLAGS := -O2 -std=gnu99 -Wall -fopenmp
 SRCDIR = VojnaBarv
-OBJDIR = linux/build
+BUILDDIR = linux/build
 BINDIR = linux/bin
 TARGET = $(BINDIR)/$(NAME)
 
 SOURCES := $(wildcard $(SRCDIR)/*.c)
 # remove file with rendering code
 SOURCES := $(filter-out $(SRCDIR)/render.c, $(SOURCES))
-OBJECTS = $(patsubst $(SRCDIR)/%.c,$(OBJDIR)/%.o,$(SOURCES))
+OBJECTS = $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
 
 $(TARGET): $(OBJECTS)
-	gcc $^ -o $@
+	gcc $(CFLAGS) $^ -o $@
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c
+$(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	gcc $(CFLAGS) -c -o $@ $<
 
-.PHONY: all clean
+.PHONY: all clean clean_all prepare_build copy_grids
 
 all: $(TARGET)
 
 clean:
-	rm -rf linux/build/* linux/bin/*
+	rm -rf linux/build/* $(TARGET)
 
-init:
-	mkdir linux
-	mkdir linux/build
-	mkdir linux/bin
+clean_all:
+	rm -rf linux
+
+prepare_build:
+	mkdir -p linux
+	mkdir -p linux/build
+	mkdir -p linux/bin
+
+copy_grids:
+	cp grid_files/* linux/bin

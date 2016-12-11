@@ -6,7 +6,7 @@
 #include "pcg_basic.h"
 
 extern pcg32_random_t rngs[];
-extern nthreads;
+extern int nthreads;
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
