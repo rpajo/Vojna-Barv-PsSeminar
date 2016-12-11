@@ -1,4 +1,5 @@
 NAME = VojnaBarv
+CC = gcc
 CFLAGS = -O2 -std=gnu99 -Wall
 SRCDIR = VojnaBarv
 BUILDDIR = linux/build
@@ -11,10 +12,10 @@ SOURCES := $(filter-out $(SRCDIR)/render.c, $(SOURCES))
 OBJECTS = $(patsubst $(SRCDIR)/%.c,$(BUILDDIR)/%.o,$(SOURCES))
 
 $(TARGET): $(OBJECTS)
-	gcc $^ -o $@
+	$(CC) $^ -o $@
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
-	gcc $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $<
 
 .PHONY: all clean clean_all prepare_build copy_grids
 
