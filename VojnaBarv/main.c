@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <omp.h>
-
 #include "grid.h"
 #include "file.h"
 #include "pcg_basic.h"
+
+#include "CL\cl.h"
 
 //#define USE_SDL // use SDL - comment to not use
 

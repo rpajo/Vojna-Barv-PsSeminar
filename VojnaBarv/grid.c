@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include "grid.h"
-#include <omp.h>
 #include "pcg_basic.h"
 
 extern pcg32_random_t rngs[];
@@ -58,44 +57,41 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	int width = (int)grid->width;
 	int height = (int)grid->height;
 
-#pragma omp parallel
-	{
-		int ix = omp_get_thread_num();		
-		int offset = (windowSize * windowSize - 1) * ix;
+	int ix = omp_get_thread_num();		
+	int offset = (windowSize * windowSize - 1) * ix;
 
-#pragma omp for private(y, x)
-		for (y = 0; y < height; y++) {
-			//int id = omp_get_thread_num();
-			//printf("Thread id: %d on y:%d\n", id, y);
-			for (x = 0; x < width; x++) {
-				int index = 0;
-				if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
-					tempGrid->colors[y][x] = grid->colors[y][x];
-					continue;
-				}
-				// look at cells inside the window and add them to array
-				for (int i = -window; i <= window; i++) {
-					for (int j = -window; j <= window; j++) {
-						if (y + i < 0 || y + i > height - 1) break; // check if window is out of bounds  - y axis
-						//printf("x+j= %d\n", (x + j));
-						if (x + j >= 0 && x + j < width) {			// check that window is not out of bounds - x axis
-							if (grid->colors[y + i][x + j] != 0		// neighbor must not be blank - 0
-								&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
-								&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
-								) {
-								neighbors[index + offset] = grid->colors[y + i][x + j];
-								index++;
-							}
+	for (y = 0; y < height; y++) {
+		//int id = omp_get_thread_num();
+		//printf("Thread id: %d on y:%d\n", id, y);
+		for (x = 0; x < width; x++) {
+			int index = 0;
+			if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
+				tempGrid->colors[y][x] = grid->colors[y][x];
+				continue;
+			}
+			// look at cells inside the window and add them to array
+			for (int i = -window; i <= window; i++) {
+				for (int j = -window; j <= window; j++) {
+					if (y + i < 0 || y + i > height - 1) break; // check if window is out of bounds  - y axis
+					//printf("x+j= %d\n", (x + j));
+					if (x + j >= 0 && x + j < width) {			// check that window is not out of bounds - x axis
+						if (grid->colors[y + i][x + j] != 0		// neighbor must not be blank - 0
+							&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
+							&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
+							) {
+							neighbors[index + offset] = grid->colors[y + i][x + j];
+							index++;
 						}
 					}
 				}
-				if (index > 0) {
-					int r = pcg32_boundedrand_r(&rngs[ix], index);
-					tempGrid->colors[y][x] = neighbors[r + offset];
-				}
-				else tempGrid->colors[y][x] = grid->colors[y][x];
 			}
+			if (index > 0) {
+				int r = pcg32_boundedrand_r(&rngs[ix], index);
+				tempGrid->colors[y][x] = neighbors[r + offset];
+			}
+			else tempGrid->colors[y][x] = grid->colors[y][x];
 		}
+		
 	}
 	unsigned char **tmp;
 	tmp = grid->colors;
