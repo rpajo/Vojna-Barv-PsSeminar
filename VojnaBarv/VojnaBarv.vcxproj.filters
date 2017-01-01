@@ -45,4 +45,27 @@
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="processGrid.cl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="mwc64x.cl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="mwc64x\mwc64x_rng.cl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="mwc64x\mwc64xvec2_rng.cl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="mwc64x\mwc64xvec4_rng.cl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="mwc64x\mwc64xvec8_rng.cl">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="mwc64x\skip_mwc.cl">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -171,6 +171,15 @@
     <ClInclude Include="pcg_basic.h" />
     <ClInclude Include="render.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="mwc64x.cl" />
+    <None Include="mwc64x\mwc64xvec2_rng.cl" />
+    <None Include="mwc64x\mwc64xvec4_rng.cl" />
+    <None Include="mwc64x\mwc64xvec8_rng.cl" />
+    <None Include="mwc64x\mwc64x_rng.cl" />
+    <None Include="mwc64x\skip_mwc.cl" />
+    <None Include="processGrid.cl" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

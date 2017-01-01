@@ -11,6 +11,9 @@ typedef struct Grid {
 
 Grid *createGrid(unsigned int width, unsigned int height);
 void destroyGrid(Grid *grid);
-void processGrid(Grid *grid, Grid *tempGrid, int window);
+unsigned char *transform2DGridTo1D(
+	unsigned char **grid,
+	unsigned int width,
+	unsigned int height);
 
 #endif

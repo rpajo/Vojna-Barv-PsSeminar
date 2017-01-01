@@ -72,6 +72,17 @@ void renderGrid(Grid *grid, Renderer *renderer) {
 			SDL_RenderCopy(renderer->SDLrenderer, renderer->textures[grid->colors[i][j]], NULL, &(renderer->rects[i][j]));
 }
 
+void render1DGrid(unsigned char *grid, int width, int height, Renderer * renderer) {
+	
+	for (int i = 0; i < height; ++i)
+		for (int j = 0; j < width; ++j)
+			SDL_RenderCopy(
+				renderer->SDLrenderer,
+				renderer->textures[grid[i * width + j]],
+				NULL,
+				&(renderer->rects[i][j]));
+}
+
 // Return pointer to initialized Renderer or NULL on error.
 Renderer *initRenderer(const char *windowName, Grid *grid, unsigned int cellSize) {
 	
