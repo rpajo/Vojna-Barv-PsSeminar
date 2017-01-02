@@ -26,7 +26,7 @@
 // parameters
 #define ITERATIONS		30000
 #define WINDOW			2
-#define FILE_NAME		"grid1.txt"
+#define FILE_NAME		"grid3.txt"
 #define WORKGROUP_SIZE	(512)
 #define MAX_SOURCE_SIZE	16384
 #define PLATFORM_ID		0
@@ -166,6 +166,22 @@ int main(int argc, char **argv) {
 	size_t num_groups = ((gridSize - 1) / local_item_size + 1);
 	size_t global_item_size = num_groups*local_item_size;
 
+#ifdef _WIN32
+
+	LARGE_INTEGER frequency;        // ticks per second
+	LARGE_INTEGER t1, t2;           // ticks
+	double elapsedTime;
+	QueryPerformanceFrequency(&frequency); // get ticks per second
+	QueryPerformanceCounter(&t1); // start timer
+
+#elif defined __gnu_linux__
+
+	struct timespec t1, t2;
+	double elapsedTime;
+	clock_gettime(CLOCK_REALTIME, &t1);
+
+#endif
+
 	while (iterations) {
 
 		// Every iteration gets new seed.
@@ -173,20 +189,22 @@ int main(int argc, char **argv) {
 			ret = clSetKernelArg(kernel1, 5, sizeof(int), (void *)&seeds[iterations]);
 			ret = clEnqueueNDRangeKernel(command_queue, kernel1, 1, NULL,
 				&global_item_size, &local_item_size, 0, NULL, NULL);
-			// fetch data for display
-			ret = clEnqueueReadBuffer(command_queue, grid2, CL_TRUE, 0,
-				gridSize * sizeof(unsigned char), oneDGrid, 0, NULL, NULL);
 		}
 		else { // read from grid2, write to grid1
 			ret = clSetKernelArg(kernel2, 5, sizeof(int), (void *)&seeds[iterations]);
 			ret = clEnqueueNDRangeKernel(command_queue, kernel2, 1, NULL,
 				&global_item_size, &local_item_size, 0, NULL, NULL);
-			// fetch data for display
-			ret = clEnqueueReadBuffer(command_queue, grid1, CL_TRUE, 0,
-				gridSize * sizeof(unsigned char), oneDGrid, 0, NULL, NULL);
 		}
 
 #ifdef USE_SDL
+
+		// copy data from card when visualization is used
+		if ((iterations % 2) == 0)
+			ret = clEnqueueReadBuffer(command_queue, grid2, CL_TRUE, 0,
+				gridSize * sizeof(unsigned char), oneDGrid, 0, NULL, NULL);
+		else
+			ret = clEnqueueReadBuffer(command_queue, grid1, CL_TRUE, 0,
+				gridSize * sizeof(unsigned char), oneDGrid, 0, NULL, NULL);
 		// render grid and display rendered content
 		render1DGrid(oneDGrid, grid->width, grid->height, renderer);
 		SDL_RenderPresent(renderer->SDLrenderer);
@@ -203,6 +221,29 @@ int main(int argc, char **argv) {
 		
 		iterations--;
 	}
+
+	// copy results from card
+	if ((ITERATIONS % 2) == 0)
+		ret = clEnqueueReadBuffer(command_queue, grid2, CL_TRUE, 0,
+			gridSize * sizeof(unsigned char), oneDGrid, 0, NULL, NULL);
+	else
+		ret = clEnqueueReadBuffer(command_queue, grid1, CL_TRUE, 0,
+			gridSize * sizeof(unsigned char), oneDGrid, 0, NULL, NULL);
+
+#ifdef _WIN32
+
+	QueryPerformanceCounter(&t2);
+	elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000.0 / frequency.QuadPart;
+	printf("%f ms\n", elapsedTime);
+
+#elif defined __gnu_linux__
+	
+	clock_gettime(CLOCK_REALTIME, &t2);
+	elapsedTime = (t2.tv_sec - t1.tv_sec) * 1000.0;
+	elapsedTime += (t2.tv_nsec - t1.tv_nsec) / 1000000.0;
+	printf("%f ms \n", elapsedTime);
+
+#endif
 
 #ifdef USE_SDL
 	destroyRenderer(grid, renderer);
