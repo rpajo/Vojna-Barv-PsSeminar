@@ -47,8 +47,11 @@ void destroyGrid(Grid *grid) {
 	grid = NULL;
 }
 
-void processGrid(Grid * grid, Grid *tempGrid, int window) {
+void processGrid(Grid * grid, Grid *tempGrid, int window, int myId, int size) 
+	{
+	printf("Sem proces %d od %d.\n", myId, size);
 
+	
 	// length of the window to look for neighbors
 	int windowSize = (1 + 2 * window);
 
@@ -103,4 +106,6 @@ void processGrid(Grid * grid, Grid *tempGrid, int window) {
 	tempGrid->colors = tmp;
 	
 	free(neighbors);
+
+	
 }
