@@ -21,8 +21,26 @@
 #define FILE_NAME		"../grid_files/grid1.txt"
 #define NTHREADS		2
 
-pcg32_random_t rngs[NTHREADS];
-int nthreads = NTHREADS;
+pcg32_random_t rngs;
+
+
+void matrixTo1D(Grid *grid, unsigned char* grid1D) {
+	// set border of neutral 1 walls for easier sending of grid chunks
+	int end = grid->width * grid->height + WINDOW * grid->width * 2 - 1;
+	for (unsigned int i = 0; i < WINDOW * grid->width; i++, end--) {
+		grid1D[i] = 1;
+		grid1D[end] = 1;
+	}
+
+	// copy grid to 1d array
+	for (unsigned int i = WINDOW; i < grid->height + WINDOW; i++) {
+		for (unsigned int j = 0; j < grid->width; j++) {
+			int idx = i*grid->width + j;
+			grid1D[idx] = grid->colors[i - WINDOW][j];
+		}
+	}
+}
+
 
 int main(int argc, char *argv[]) {
 	
@@ -47,14 +65,6 @@ int main(int argc, char *argv[]) {
 	destroyGridFile(config);
 
 	unsigned int iterations = ITERATIONS;
-	omp_set_num_threads(NTHREADS);
-
-	// Initialize random states.
-	// Third argument determines the position where sequence of random numbers
-	// should start. To give some variation, pointer is assigned which should
-	// be nondeterministic.
-	for (int i = 0; i < NTHREADS; ++i)
-		pcg32_srandom_r(&rngs[i], (uint64_t)time(NULL), (uint64_t)&rngs[i]);
 
 #ifdef USE_SDL
 	SDL_Event sdlEvent;
@@ -66,40 +76,46 @@ int main(int argc, char *argv[]) {
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myId);
 
+	// Initialize random states.
+	// Third argument determines the position where sequence of random numbers
+	// should start. To give some variation, pointer is assigned which should
+	// be nondeterministic.
+	
+	pcg32_srandom_r(&rngs, (uint64_t)time(NULL), (uint64_t)&rngs);
+
 	int rows = 2 * WINDOW + 1;
 	int partSize = rows * grid->width;
 
 	unsigned char *grid1D = (unsigned char *)calloc(sizeof(unsigned char), grid->width * grid->height + WINDOW * grid->width * 2);
 	unsigned char *myPart = (unsigned char *)calloc(sizeof(unsigned char), partSize);
-
-	if (myId == 0) {
-
-		// set border of neutral 1 walls for easier sending of grid chunks
-		int end = grid->width * grid->height + WINDOW * grid->width * 2 - 1;
-		for (int i = 0; i < WINDOW * grid->width; i++, end--) {
-			grid1D[i] = 1;
-			grid1D[end] = 1;
-		}
-
-		// copy grid to 1d array
-		for (unsigned int i = WINDOW; i < grid->height + WINDOW ; i++) {
-			for (unsigned int j = 0; j < grid->width; j++) {
-				int idx = i*grid->width + j;
-				grid1D[idx] = grid->colors[i-WINDOW][j];
-			}
-		}
-	}
+	unsigned char *newRow = (unsigned char *)calloc(sizeof(unsigned char), grid->width);
 	
 	while (iterations--) {
 		if (myId == 0) {
-			int rows = 0;
-			while (rows < grid->height) {
-				for (int i = 1; i < size && rows < grid->height; i++) {
-					printf("Send to %d\n", i);
-					MPI_Send(grid1D + rows*grid->width, partSize, MPI_UNSIGNED_CHAR, i, 0, MPI_COMM_WORLD);
-					rows++;
+			matrixTo1D(grid, grid1D);
+
+			int updateRow = 0;
+			unsigned int sendRows = 0, recvRows = 0;
+
+			while (sendRows < grid->height) {
+				for (int i = 1; i < size && sendRows < grid->height; i++) {
+					//printf("Send to %d\n", i);
+					MPI_Send(grid1D + sendRows*grid->width, partSize, MPI_UNSIGNED_CHAR, i, 0, MPI_COMM_WORLD);
+					sendRows++;
+					recvRows++;
 				}
+
+				for (unsigned int i = 1; i <= recvRows; i++) {
+					MPI_Recv(grid->colors[updateRow], grid->width, MPI_UNSIGNED_CHAR, i, MPI_ANY_TAG, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+					updateRow++;
+					printf("\n");
+					for (unsigned int j = 0; j < grid->width; j++) {
+						printf("%d ", grid->colors[updateRow - 1][j]);
+					}
+				}
+				recvRows = 0;
 			}
+			
 			//send end signal
 			myPart[0] = 255;
 			for (int i = 1; i < size; i++) {
@@ -115,14 +131,16 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 				else {
-					printf("Recieved id: %d\n", myId);
-					// call process grid
-
-					
+					/*printf("Recieved id: %d\n", myId);
 					for (int i = 0; i < partSize; i++) {
+						if (i == WINDOW*grid->width || i == (WINDOW + 1)*grid->width + 1) printf("| ");
 						printf("%d ", myPart[i]);
-					}
-					
+					}*/
+					printf("\n");
+					// call process grid
+					processGrid(myPart, newRow, grid->width, WINDOW, myId);
+					//printf("\Sending Data back to master\n");
+					MPI_Send(newRow, grid->width, MPI_UNSIGNED_CHAR, 0, myId, MPI_COMM_WORLD);
 				}
 			}
 		}

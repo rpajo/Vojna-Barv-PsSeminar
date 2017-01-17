@@ -6,7 +6,6 @@
 #include "pcg_basic.h"
 
 extern pcg32_random_t rngs[];
-extern int nthreads;
 
 // Return pointer to Grid with given dimensions or return NULL.
 Grid *createGrid(unsigned int width, unsigned int height) {
@@ -47,63 +46,65 @@ void destroyGrid(Grid *grid) {
 	grid = NULL;
 }
 
-void processGrid(Grid * grid, Grid *tempGrid, int window, int myId, int size) 
+void processGrid(unsigned char* myPart, unsigned char* newRow, unsigned int width, int window, int myId)
 	{
-	printf("Sem proces %d od %d.\n", myId, size);
+	//printf("Sem proces %d\n", myId);
 
 	
 	// length of the window to look for neighbors
 	int windowSize = (1 + 2 * window);
 
 	// array of cells inside window
-	int *neighbors = (int *)calloc( (windowSize * windowSize -1) * nthreads, sizeof(int));
-	int x, y;
-	int width = (int)grid->width;
-	int height = (int)grid->height;
+	int *neighbors = (int *)calloc( (windowSize * windowSize -1), sizeof(int));
 
-#pragma omp parallel
-	{
-		int ix = omp_get_thread_num();		
-		int offset = (windowSize * windowSize - 1) * ix;
+	unsigned int minIdx = window * width;
+	unsigned int maxIdx = (window + 1)*width;
+	int newIdx = 0;
 
-#pragma omp for private(y, x)
-		for (y = 0; y < height; y++) {
-			//int id = omp_get_thread_num();
-			//printf("Thread id: %d on y:%d\n", id, y);
-			for (x = 0; x < width; x++) {
-				int index = 0;
-				if (grid->colors[y][x] == 1) { // if cell is uncolorable(wall)
-					tempGrid->colors[y][x] = grid->colors[y][x];
-					continue;
+	for (unsigned int x = minIdx; x < maxIdx; x++, newIdx++) {
+		//printf("[%d->", myPart[x]);
+		if (myPart[x] == 1) { // if cell is uncolorable(wall)
+			newRow[newIdx] = 1;
+			//printf("%d] ", newRow[newIdx]);
+			continue;
+		}
+		int index = 0;
+		// neighbors left, right
+		for (int y = -window; y <= window; y++) {
+			if (x + y >= minIdx && x + y < maxIdx) {			// check that window is not out of bounds - x axis
+				if (myPart[x+y] != 0							// neighbor must not be blank - 0
+					&& (y != 0)									// don't add curent cell to neighbors
+					&& myPart[x + y] != 1)						// don't add walls to neighbors
+					{
+					neighbors[index] = myPart[x + y];
+					index++;
 				}
-				// look at cells inside the window and add them to array
-				for (int i = -window; i <= window; i++) {
-					for (int j = -window; j <= window; j++) {
-						if (y + i < 0 || y + i > height - 1) break; // check if window is out of bounds  - y axis
-						//printf("x+j= %d\n", (x + j));
-						if (x + j >= 0 && x + j < width) {			// check that window is not out of bounds - x axis
-							if (grid->colors[y + i][x + j] != 0		// neighbor must not be blank - 0
-								&& !(i == 0 && j == 0)				// don't add curent cell to neighbors
-								&& grid->colors[y + i][x + j] != 1	// don't add walls to neighbors
-								) {
-								neighbors[index + offset] = grid->colors[y + i][x + j];
-								index++;
-							}
-						}
-					}
-				}
-				if (index > 0) {
-					int r = pcg32_boundedrand_r(&rngs[ix], index);
-					tempGrid->colors[y][x] = neighbors[r + offset];
-				}
-				else tempGrid->colors[y][x] = grid->colors[y][x];
 			}
 		}
+		// neighbors up, down
+		for (int y = -window; y <= window; y++) {
+			for (int j = -window; j <= window; j++) {
+				if (y != 0 && (x + y*width + j) >= 0 && (x + y*width + j) < (window * 2 + 1)*width) {			// check that window is not out of bounds - x axis
+					//printf("y: %d, j: %d\n", y, j);
+					if (myPart[x + y*width + j] != 0							// neighbor must not be blank - 0
+						&& myPart[x + y*width + j] != 1)						// don't add walls to neighbors
+					{
+						// printf("Add %d to neighbors (%d + %d)\n", myPart[x + y*width + j], x, y*width + j);
+						neighbors[index] = myPart[x + y*width + j];
+						index++;
+					}
+				}
+			}
+		}
+
+		if (index > 0) {
+			int r = pcg32_boundedrand_r(&rngs, index);
+			newRow[newIdx] = neighbors[r];
+		}
+		else newRow[newIdx] = myPart[x];
+
+		//printf("%d] ", newRow[newIdx]);
 	}
-	unsigned char **tmp;
-	tmp = grid->colors;
-	grid->colors = tempGrid->colors;
-	tempGrid->colors = tmp;
 	
 	free(neighbors);
 
