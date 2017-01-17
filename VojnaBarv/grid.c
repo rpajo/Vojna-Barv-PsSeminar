@@ -48,8 +48,12 @@ void destroyGrid(Grid *grid) {
 
 void processGrid(unsigned char* myPart, unsigned char* newRow, unsigned int width, int window, int myId)
 	{
-	//printf("Sem proces %d\n", myId);
-
+	/*
+	for (int i = 0; i < width + window*2*width; i++) {
+		if (i == window*width || i == window*width + width) printf("| ");
+		printf("%d ", myPart[i]);
+	}
+	*/
 	
 	// length of the window to look for neighbors
 	int windowSize = (1 + 2 * window);
@@ -76,6 +80,7 @@ void processGrid(unsigned char* myPart, unsigned char* newRow, unsigned int widt
 					&& (y != 0)									// don't add curent cell to neighbors
 					&& myPart[x + y] != 1)						// don't add walls to neighbors
 					{
+					//printf("Add %d to neighbors (%d + %d)\n", myPart[x + y], x, y);
 					neighbors[index] = myPart[x + y];
 					index++;
 				}
@@ -85,11 +90,12 @@ void processGrid(unsigned char* myPart, unsigned char* newRow, unsigned int widt
 		for (int y = -window; y <= window; y++) {
 			for (int j = -window; j <= window; j++) {
 				if (y != 0 && (x + y*width + j) >= 0 && (x + y*width + j) < (window * 2 + 1)*width) {			// check that window is not out of bounds - x axis
-					//printf("y: %d, j: %d\n", y, j);
+					//printf("y: %d, j: %d -> %d\n", y, j, x + y*width + j);
 					if (myPart[x + y*width + j] != 0							// neighbor must not be blank - 0
-						&& myPart[x + y*width + j] != 1)						// don't add walls to neighbors
+						&& myPart[x + y*width + j] != 1							// don't add walls to neighbors
+						&& ((x + y*width + j) >= maxIdx || (x + y*width + j) < minIdx) )					// neightbor must be in a different row
 					{
-						// printf("Add %d to neighbors (%d + %d)\n", myPart[x + y*width + j], x, y*width + j);
+						//printf("Add %d to neighbors (%d + %d)\n", myPart[x + y*width + j], x, y*width + j);
 						neighbors[index] = myPart[x + y*width + j];
 						index++;
 					}
@@ -107,6 +113,10 @@ void processGrid(unsigned char* myPart, unsigned char* newRow, unsigned int widt
 	}
 	
 	free(neighbors);
-
+	/*
+	for (int i = 0; i < width; i++) {
+		printf("%d ", newRow[i]);
+	}
+	*/
 	
 }
