@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <omp.h>
 #include "mpi.h"
 #include "grid.h"
 #include "file.h"
@@ -16,30 +15,11 @@
 #define DELAY			((unsigned int) 100)
 #endif
 
-#define ITERATIONS		2
+#define ITERATIONS		30000
 #define WINDOW			1
-#define FILE_NAME		"../grid_files/grid4.txt"
-#define NTHREADS		2
+#define FILE_NAME		"../grid_files/grid3.txt"
 
 pcg32_random_t rngs;
-
-
-void matrixTo1D(Grid *grid, unsigned char* grid1D) {
-	// set border of neutral 1 walls for easier sending of grid chunks
-	int end = grid->width * grid->height + WINDOW * grid->width * 2 - 1;
-	for (unsigned int i = 0; i < WINDOW * grid->width; i++, end--) {
-		grid1D[i] = 1;
-		grid1D[end] = 1;
-	}
-
-	// copy grid to 1d array
-	for (unsigned int i = WINDOW; i < grid->height + WINDOW; i++) {
-		for (unsigned int j = 0; j < grid->width; j++) {
-			int idx = i*grid->width + j;
-			grid1D[idx] = grid->colors[i - WINDOW][j];
-		}
-	}
-}
 
 
 int main(int argc, char *argv[]) {
@@ -70,8 +50,8 @@ int main(int argc, char *argv[]) {
 	SDL_Event sdlEvent;
 	int run = 1;
 #endif
-
 	int myId, size;
+	double start, finish;
 	MPI_Init(&argc, &argv);
 	MPI_Comm_size(MPI_COMM_WORLD, &size);
 	MPI_Comm_rank(MPI_COMM_WORLD, &myId);
@@ -109,6 +89,8 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
+
+	start = MPI_Wtime(); /*start timer*/
 
 	while (iterations--) {
 		if (myId == 0) {
@@ -200,14 +182,12 @@ int main(int argc, char *argv[]) {
 #endif
 	}
 
+	finish = MPI_Wtime(); /*stop timer*/
 
-	//double startTime = omp_get_wtime();
-
-
-
+	if (myId == 0) printf("%f s\n", finish - start);
+	
 	MPI_Finalize();
-	//double endTime = omp_get_wtime();
-	//printf("%f s\n", endTime-startTime);
+
 
 #ifdef USE_SDL
 	destroyRenderer(grid, renderer);
